@@ -2,7 +2,17 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
-#include <focusmanagement.h>
+#include <QKeyEvent>
+#include <QTimer>
+#include <QString>
+#include <QDate>
+#include <QFile>
+#include <QDebug>
+#include <QMessageBox>
+#include <xlsxdocument.h>
+#include <QFile>
+#include <QFileDevice>
+#include <QFileDialog>
 
 namespace Ui {
 class MainWindow;
@@ -15,10 +25,23 @@ class MainWindow : public QMainWindow
 public:
     explicit MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
-    FocusManagement * focus_manage;
+
+    bool eventFilter(QObject *watched, QEvent *event);
+    QTimer *date_timer;
+    QDateTime date_time;
+    QString CurDateTime;
+    QStringList TimeList;
+
+    int TableRowCount;
+    int XlsxRowCount;
+
+protected:
+    void keyPressEvent(QKeyEvent *event);
+
 
 public slots:
-    void onFocusChange(Qt::Key key);
+    void date_update();
+    void file_update();
 
 private:
     Ui::MainWindow *ui;

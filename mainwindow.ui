@@ -23,6 +23,9 @@
       <height>491</height>
      </rect>
     </property>
+    <property name="midLineWidth">
+     <number>1</number>
+    </property>
     <property name="currentIndex">
      <number>0</number>
     </property>
@@ -774,7 +777,7 @@ p, li { white-space: pre-wrap; }
        <item row="1" column="1">
         <layout class="QHBoxLayout" name="horizontalLayout">
          <item>
-          <widget class="QTextEdit" name="Edit_tushen">
+          <widget class="QTextEdit" name="tEdit_tushen">
            <property name="sizePolicy">
             <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
              <horstretch>0</horstretch>
@@ -1223,6 +1226,12 @@ p, li { white-space: pre-wrap; }
       <property name="styleSheet">
        <string notr="true">font: 25 16pt &quot;SimSun&quot;;</string>
       </property>
+      <property name="lineWidth">
+       <number>1</number>
+      </property>
+      <property name="midLineWidth">
+       <number>1</number>
+      </property>
       <property name="showDropIndicator" stdset="0">
        <bool>true</bool>
       </property>
@@ -1230,7 +1239,7 @@ p, li { white-space: pre-wrap; }
        <bool>true</bool>
       </property>
       <property name="rowCount">
-       <number>10</number>
+       <number>1</number>
       </property>
       <property name="columnCount">
        <number>9</number>
@@ -1243,18 +1252,9 @@ p, li { white-space: pre-wrap; }
       </attribute>
       <row>
        <property name="text">
-        <string/>
+        <string>1</string>
        </property>
       </row>
-      <row/>
-      <row/>
-      <row/>
-      <row/>
-      <row/>
-      <row/>
-      <row/>
-      <row/>
-      <row/>
       <column>
        <property name="text">
         <string>序号</string>
@@ -1301,7 +1301,7 @@ p, li { white-space: pre-wrap; }
        </property>
       </column>
      </widget>
-     <widget class="QPushButton" name="pushButton">
+     <widget class="QPushButton" name="Button_dataout">
       <property name="geometry">
        <rect>
         <x>920</x>

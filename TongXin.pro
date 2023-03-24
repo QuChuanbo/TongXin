@@ -27,16 +27,16 @@ DEFINES += QT_DEPRECATED_WARNINGS
 CONFIG += c++11
 
 SOURCES += \
-        focusmanagement.cpp \
         main.cpp \
         mainwindow.cpp
 
 HEADERS += \
-        focusmanagement.h \
         mainwindow.h
 
 FORMS += \
         mainwindow.ui
+
+include(../TongXin/xlsx/qtxlsx.pri)
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin
