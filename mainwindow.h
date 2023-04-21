@@ -31,9 +31,13 @@ public:
     QDateTime date_time;
     QString CurDateTime;
     QStringList TimeList;
+    QString filePathName;
+    QFileInfo fileinfo;
+    QMessageBox::StandardButton result;
 
     int TableRowCount;
     int XlsxRowCount;
+    bool TableFindFlag;
 
 protected:
     void keyPressEvent(QKeyEvent *event);

@@ -36,8 +36,10 @@ MainWindow::MainWindow(QWidget *parent) :
     date_timer = new QTimer(this);
     date_timer->start(1000);
     connect(date_timer,SIGNAL(timeout()),this,SLOT(date_update()));
-    TableRowCount = 1;
+    TableRowCount = 0;
     XlsxRowCount = 1;
+    TableFindFlag = false;
+    filePathName = "";
 }
 
 void MainWindow::date_update()
@@ -65,35 +67,61 @@ void MainWindow::file_update()
 {
 
 }
-
+/*tableWidget的行从0开始，只有数据没有标题*/
+/*xlsx的行从1开始，且第一行是标题*/
+/*如果tableWidget的行数是0~8(这0~8都是数据)，那么TableRowCount是9，而xlsx的行数是1~10*/
+/*当TableRowCount为0时tableWidget无数据*/
 void MainWindow::keyPressEvent(QKeyEvent *event)
 {
     switch (event->key()) {
     case Qt::Key_Q:
-
+//        ui->tableWidget->clear();
+        for (int i=TableRowCount-1;i>=0;i--) {
+            ui->tableWidget->removeRow(i);
+        }
+        TableFindFlag = true;
+        filePathName = "/home/mdtech/QtProject/TongXin/Data-";
+        filePathName += ui->time_year_2->document()->toPlainText();
+        filePathName += "-";
+        filePathName += ui->time_month_2->document()->toPlainText();
+        filePathName += "-";
+        filePathName += ui->time_day_2->document()->toPlainText();
+        filePathName += ".xls";
+        fileinfo = filePathName;
+        if(fileinfo.isFile())
+        {
+            QXlsx::Document findxlsx(filePathName);
+            findxlsx.setColumnWidth(1, 9);
+            XlsxRowCount = findxlsx.dimension().rowCount();
+            TableRowCount = XlsxRowCount-1;
+            for (int i=2;i<=XlsxRowCount;i++) {
+                ui->tableWidget->insertRow(i-2);
+                ui->tableWidget->setItem(i-2,0,new QTableWidgetItem(findxlsx.cellAt(i,1)->value().toString()));
+                ui->tableWidget->setItem(i-2,1,new QTableWidgetItem(findxlsx.cellAt(i,2)->value().toString()));
+                ui->tableWidget->setItem(i-2,2,new QTableWidgetItem(findxlsx.cellAt(i,3)->value().toString()));
+                ui->tableWidget->setItem(i-2,3,new QTableWidgetItem(findxlsx.cellAt(i,4)->value().toString()));
+                ui->tableWidget->setItem(i-2,4,new QTableWidgetItem(findxlsx.cellAt(i,5)->value().toString()));
+                ui->tableWidget->setItem(i-2,5,new QTableWidgetItem(findxlsx.cellAt(i,6)->value().toString()));
+                ui->tableWidget->setItem(i-2,6,new QTableWidgetItem(findxlsx.cellAt(i,7)->value().toString()));
+                ui->tableWidget->setItem(i-2,7,new QTableWidgetItem(findxlsx.cellAt(i,8)->value().toString()));
+                ui->tableWidget->setItem(i-2,8,new QTableWidgetItem(findxlsx.cellAt(i,9)->value().toString()));
+            }
+        }
+        else {
+            result = QMessageBox::critical(this, "Title","未查找到数据");
+        }
         break;
     case Qt::Key_S:
-//        int rowCount = ui->tableWidget->rowCount();
-        ui->tableWidget->insertRow(TableRowCount);
-        ui->tableWidget->setItem(TableRowCount,0,new QTableWidgetItem(QString::number(TableRowCount)));
-        ui->tableWidget->setItem(TableRowCount,1,new QTableWidgetItem(date_time.toString("yyyy-MM-dd")));
-        ui->tableWidget->setItem(TableRowCount,2,new QTableWidgetItem(date_time.toString("hh:mm:ss")));
-        ui->tableWidget->setItem(TableRowCount,3,new QTableWidgetItem(ui->tEdit_zuhao->document()->toPlainText()));
-        ui->tableWidget->setItem(TableRowCount,4,new QTableWidgetItem(ui->tEdit_tushen->document()->toPlainText()));
-        ui->tableWidget->setItem(TableRowCount,5,new QTableWidgetItem(ui->tEdit_zushen->document()->toPlainText()));
-        ui->tableWidget->setItem(TableRowCount,6,new QTableWidgetItem(ui->tEdit_zuzhij->document()->toPlainText()));
-        ui->tableWidget->setItem(TableRowCount,7,new QTableWidgetItem(ui->tEdit_kowei->document()->toPlainText()));
-        ui->tableWidget->setItem(TableRowCount,8,new QTableWidgetItem(ui->tEdit_kozhij->document()->toPlainText()));
-//        TableRowCount++;
-//存储到xlsx
         if(ui->tEdit_zuhao->document()->isEmpty() || ui->tEdit_tushen->document()->isEmpty() \
            || ui->tEdit_zushen->document()->isEmpty() || ui->tEdit_zuzhij->document()->isEmpty() \
            || ui->tEdit_kowei->document()->isEmpty() || ui->tEdit_kowei->document()->isEmpty())
         {
-            QMessageBox::StandardButton result = QMessageBox::critical(this, "Title","数据填写不全");
+            result = QMessageBox::critical(this, "Title","数据填写不全");
         }
         else {
-            QString filePathName = "/home/mdtech/QtProject/TongXin/Test.xls";
+            filePathName = "/home/mdtech/QtProject/TongXin/Data-";
+            filePathName += date_time.toString("yyyy-MM-dd");
+            filePathName += ".xls";
             //xlsx导出
             QXlsx::Document xlsx(filePathName);
             QStringList titleList;
@@ -101,7 +129,7 @@ void MainWindow::keyPressEvent(QKeyEvent *event)
             xlsx.setColumnWidth(1, 9);//第一行,20列宽
 
         // 设置保存的默认文件名称
-            QFileInfo fileinfo(filePathName);
+            fileinfo = filePathName;
             if(!fileinfo.isFile())
             {
                 // 设置excel表头（第一行数据）
@@ -122,31 +150,44 @@ void MainWindow::keyPressEvent(QKeyEvent *event)
             }
             else {
                 XlsxRowCount = xlsx.dimension().rowCount();
+                if(TableFindFlag)
+                {
+                    for (int i=TableRowCount-1;i>=0;i--) {
+                        ui->tableWidget->removeRow(i);
+                    }
+                    TableRowCount = XlsxRowCount-1;
+                    for (int i=2;i<=XlsxRowCount;i++) {
+                        ui->tableWidget->insertRow(i-2);
+                        ui->tableWidget->setItem(i-2,0,new QTableWidgetItem(xlsx.cellAt(i,1)->value().toString()));
+                        ui->tableWidget->setItem(i-2,1,new QTableWidgetItem(xlsx.cellAt(i,2)->value().toString()));
+                        ui->tableWidget->setItem(i-2,2,new QTableWidgetItem(xlsx.cellAt(i,3)->value().toString()));
+                        ui->tableWidget->setItem(i-2,3,new QTableWidgetItem(xlsx.cellAt(i,4)->value().toString()));
+                        ui->tableWidget->setItem(i-2,4,new QTableWidgetItem(xlsx.cellAt(i,5)->value().toString()));
+                        ui->tableWidget->setItem(i-2,5,new QTableWidgetItem(xlsx.cellAt(i,6)->value().toString()));
+                        ui->tableWidget->setItem(i-2,6,new QTableWidgetItem(xlsx.cellAt(i,7)->value().toString()));
+                        ui->tableWidget->setItem(i-2,7,new QTableWidgetItem(xlsx.cellAt(i,8)->value().toString()));
+                        ui->tableWidget->setItem(i-2,8,new QTableWidgetItem(xlsx.cellAt(i,9)->value().toString()));
+                    }
+                }
             }
+
+            ui->tableWidget->insertRow(TableRowCount);
+            ui->tableWidget->setItem(TableRowCount,0,new QTableWidgetItem(QString::number(TableRowCount)));
+            ui->tableWidget->setItem(TableRowCount,1,new QTableWidgetItem(date_time.toString("yyyy-MM-dd")));
+            ui->tableWidget->setItem(TableRowCount,2,new QTableWidgetItem(date_time.toString("hh:mm:ss")));
+            ui->tableWidget->setItem(TableRowCount,3,new QTableWidgetItem(ui->tEdit_zuhao->document()->toPlainText()));
+            ui->tableWidget->setItem(TableRowCount,4,new QTableWidgetItem(ui->tEdit_tushen->document()->toPlainText()));
+            ui->tableWidget->setItem(TableRowCount,5,new QTableWidgetItem(ui->tEdit_zushen->document()->toPlainText()));
+            ui->tableWidget->setItem(TableRowCount,6,new QTableWidgetItem(ui->tEdit_zuzhij->document()->toPlainText()));
+            ui->tableWidget->setItem(TableRowCount,7,new QTableWidgetItem(ui->tEdit_kowei->document()->toPlainText()));
+            ui->tableWidget->setItem(TableRowCount,8,new QTableWidgetItem(ui->tEdit_kozhij->document()->toPlainText()));
+
 //            qDebug() << "TableRowCount 1111 = " << TableRowCount;
             XlsxRowCount++;
-        // 获取保存文件路径
-//            QFileDialog *fileDlg = new QFileDialog(this);
-//            fileDlg->setWindowTitle("保存文件");
-//            fileDlg->setAcceptMode(QFileDialog::AcceptSave);
-//            fileDlg->selectFile(defaultFileName);
-//            fileDlg->setNameFilter("Excel Files(*.xls *.xlsx)");
-//            fileDlg->setDefaultSuffix("xls");
-
-//            if (fileDlg->exec() == QDialog::Accepted)//点击保存
-//            {
-//                filePathName = fileDlg->selectedFiles().at(0);
-//                qDebug() << filePathName;
-//            }
-
             for (int i = 0; i < 9; i++)
             {
-//                for(int j = 0;j<ui->tableWidget->rowCount()-1;j++)
-//                {
-//                    if(ui->tableWidget->item(j+1,i)!=NULL) xlsx.write(j+XlsxRowCount,i+1,ui->tableWidget->item(j+1,i)->text());
-//                    else xlsx.write(j+XlsxRowCount,i+1,"");
-//                }
-                if(ui->tableWidget->item(TableRowCount,i)!=NULL) xlsx.write(XlsxRowCount,i+1,ui->tableWidget->item(TableRowCount,i)->text());
+                if(ui->tableWidget->item(TableRowCount,i)!=NULL)
+                    xlsx.write(XlsxRowCount,i+1,ui->tableWidget->item(TableRowCount,i)->text());
                 else xlsx.write(XlsxRowCount,i+1,"");
             }
             TableRowCount++;
@@ -166,7 +207,8 @@ bool MainWindow::eventFilter(QObject *watched, QEvent *event)
     QTextEdit* te_watched = (QTextEdit*)watched;
     QKeyEvent* ke_event = (QKeyEvent*)event;
     if((Qt::Key_S == ke_event->key() || Qt::Key_Q == ke_event->key() \
-        || Qt::Key_D == ke_event->key() || Qt::Key_X == ke_event->key()) \
+        || Qt::Key_D == ke_event->key() || Qt::Key_X == ke_event->key() \
+        || Qt::Key_Plus == ke_event->key() || Qt::Key_Minus == ke_event->key()) \
         &&(ke_event->KeyPress == ke_event->type()))
     {
         ke_event->ignore();
@@ -588,6 +630,7 @@ bool MainWindow::eventFilter(QObject *watched, QEvent *event)
         else if ((Qt::Key_Down == ke_event->key())&&(ke_event->KeyPress == ke_event->type())) {
             ke_event->ignore();
 //            ui->tEdit_zuhao->setFocus();
+            ui->tableWidget->setFocus();
             return true;
         }
         else {
@@ -610,6 +653,7 @@ bool MainWindow::eventFilter(QObject *watched, QEvent *event)
         else if ((Qt::Key_Down == ke_event->key())&&(ke_event->KeyPress == ke_event->type())) {
             ke_event->ignore();
 //            ui->tEdit_zuhao->setFocus();
+            ui->tableWidget->setFocus();
             return true;
         }
         else {
@@ -632,6 +676,7 @@ bool MainWindow::eventFilter(QObject *watched, QEvent *event)
         else if ((Qt::Key_Down == ke_event->key())&&(ke_event->KeyPress == ke_event->type())) {
             ke_event->ignore();
 //            ui->tEdit_zuhao->setFocus();
+            ui->tableWidget->setFocus();
             return true;
         }
         else {
@@ -654,6 +699,7 @@ bool MainWindow::eventFilter(QObject *watched, QEvent *event)
         else if ((Qt::Key_Down == ke_event->key())&&(ke_event->KeyPress == ke_event->type())) {
             ke_event->ignore();
 //            ui->tEdit_zuhao->setFocus();
+            ui->tableWidget->setFocus();
             return true;
         }
         else {
@@ -676,6 +722,7 @@ bool MainWindow::eventFilter(QObject *watched, QEvent *event)
         else if ((Qt::Key_Down == ke_event->key())&&(ke_event->KeyPress == ke_event->type())) {
             ke_event->ignore();
 //            ui->tEdit_zuhao->setFocus();
+            ui->tableWidget->setFocus();
             return true;
         }
         else {
@@ -692,6 +739,7 @@ bool MainWindow::eventFilter(QObject *watched, QEvent *event)
         else if ((Qt::Key_Down == ke_event->key())&&(ke_event->KeyPress == ke_event->type())) {
             ke_event->ignore();
 //            ui->tEdit_zuhao->setFocus();
+            ui->tableWidget->setFocus();
             return true;
         }
         else {
@@ -699,7 +747,32 @@ bool MainWindow::eventFilter(QObject *watched, QEvent *event)
             return false;
         }
     }
-
+    else if (ui->tableWidget->hasFocus()) {
+        if ((Qt::Key_Left == ke_event->key())&&(ke_event->KeyPress == ke_event->type())) {
+            ke_event->ignore();
+//            ui->tEdit_sousuojg->setFocus();
+            return true;
+        }
+        else if ((Qt::Key_Right == ke_event->key())&&(ke_event->KeyPress == ke_event->type())) {
+            ke_event->ignore();
+//            ui->tEdit_zuhao->setFocus();
+            return true;
+        }
+        else if ((Qt::Key_Up == ke_event->key())&&(ke_event->KeyPress == ke_event->type())) {
+            ke_event->ignore();
+//            ui->tEdit_zuhao->setFocus();
+            return true;
+        }
+        else if ((Qt::Key_Down == ke_event->key())&&(ke_event->KeyPress == ke_event->type())) {
+            ke_event->ignore();
+//            ui->tEdit_zuhao->setFocus();
+            return true;
+        }
+        else {
+            ke_event->accept();
+            return false;
+        }
+    }
 
     else {
         ke_event->accept();
