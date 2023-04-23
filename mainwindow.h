@@ -37,7 +37,7 @@ public:
 
     int TableRowCount;
     int XlsxRowCount;
-    bool TableFindFlag;
+    int DeleteRowCount;
 
 protected:
     void keyPressEvent(QKeyEvent *event);

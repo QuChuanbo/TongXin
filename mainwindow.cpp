@@ -38,7 +38,7 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(date_timer,SIGNAL(timeout()),this,SLOT(date_update()));
     TableRowCount = 0;
     XlsxRowCount = 1;
-    TableFindFlag = false;
+    DeleteRowCount = 0;
     filePathName = "";
 }
 
@@ -79,7 +79,6 @@ void MainWindow::keyPressEvent(QKeyEvent *event)
         for (int i=TableRowCount-1;i>=0;i--) {
             ui->tableWidget->removeRow(i);
         }
-        TableFindFlag = true;
         filePathName = "/home/mdtech/QtProject/TongXin/Data-";
         filePathName += ui->time_year_2->document()->toPlainText();
         filePathName += "-";
@@ -113,8 +112,7 @@ void MainWindow::keyPressEvent(QKeyEvent *event)
         break;
     case Qt::Key_S:
         if(ui->tEdit_zuhao->document()->isEmpty() || ui->tEdit_tushen->document()->isEmpty() \
-           || ui->tEdit_zushen->document()->isEmpty() || ui->tEdit_zuzhij->document()->isEmpty() \
-           || ui->tEdit_kowei->document()->isEmpty() || ui->tEdit_kowei->document()->isEmpty())
+           || ui->tEdit_zushen->document()->isEmpty() || ui->tEdit_zuzhij->document()->isEmpty())
         {
             result = QMessageBox::critical(this, "Title","数据填写不全");
         }
@@ -150,29 +148,27 @@ void MainWindow::keyPressEvent(QKeyEvent *event)
             }
             else {
                 XlsxRowCount = xlsx.dimension().rowCount();
-                if(TableFindFlag)
-                {
-                    for (int i=TableRowCount-1;i>=0;i--) {
-                        ui->tableWidget->removeRow(i);
-                    }
-                    TableRowCount = XlsxRowCount-1;
-                    for (int i=2;i<=XlsxRowCount;i++) {
-                        ui->tableWidget->insertRow(i-2);
-                        ui->tableWidget->setItem(i-2,0,new QTableWidgetItem(xlsx.cellAt(i,1)->value().toString()));
-                        ui->tableWidget->setItem(i-2,1,new QTableWidgetItem(xlsx.cellAt(i,2)->value().toString()));
-                        ui->tableWidget->setItem(i-2,2,new QTableWidgetItem(xlsx.cellAt(i,3)->value().toString()));
-                        ui->tableWidget->setItem(i-2,3,new QTableWidgetItem(xlsx.cellAt(i,4)->value().toString()));
-                        ui->tableWidget->setItem(i-2,4,new QTableWidgetItem(xlsx.cellAt(i,5)->value().toString()));
-                        ui->tableWidget->setItem(i-2,5,new QTableWidgetItem(xlsx.cellAt(i,6)->value().toString()));
-                        ui->tableWidget->setItem(i-2,6,new QTableWidgetItem(xlsx.cellAt(i,7)->value().toString()));
-                        ui->tableWidget->setItem(i-2,7,new QTableWidgetItem(xlsx.cellAt(i,8)->value().toString()));
-                        ui->tableWidget->setItem(i-2,8,new QTableWidgetItem(xlsx.cellAt(i,9)->value().toString()));
-                    }
+                TableRowCount = ui->tableWidget->rowCount() - 1;
+                for (int i=TableRowCount-1;i>=0;i--) {
+                    ui->tableWidget->removeRow(i);
+                }
+                TableRowCount = XlsxRowCount-1;
+                for (int i=2;i<=XlsxRowCount;i++) {
+                    ui->tableWidget->insertRow(i-2);
+                    ui->tableWidget->setItem(i-2,0,new QTableWidgetItem(xlsx.cellAt(i,1)->value().toString()));
+                    ui->tableWidget->setItem(i-2,1,new QTableWidgetItem(xlsx.cellAt(i,2)->value().toString()));
+                    ui->tableWidget->setItem(i-2,2,new QTableWidgetItem(xlsx.cellAt(i,3)->value().toString()));
+                    ui->tableWidget->setItem(i-2,3,new QTableWidgetItem(xlsx.cellAt(i,4)->value().toString()));
+                    ui->tableWidget->setItem(i-2,4,new QTableWidgetItem(xlsx.cellAt(i,5)->value().toString()));
+                    ui->tableWidget->setItem(i-2,5,new QTableWidgetItem(xlsx.cellAt(i,6)->value().toString()));
+                    ui->tableWidget->setItem(i-2,6,new QTableWidgetItem(xlsx.cellAt(i,7)->value().toString()));
+                    ui->tableWidget->setItem(i-2,7,new QTableWidgetItem(xlsx.cellAt(i,8)->value().toString()));
+                    ui->tableWidget->setItem(i-2,8,new QTableWidgetItem(xlsx.cellAt(i,9)->value().toString()));
                 }
             }
 
             ui->tableWidget->insertRow(TableRowCount);
-            ui->tableWidget->setItem(TableRowCount,0,new QTableWidgetItem(QString::number(TableRowCount)));
+            ui->tableWidget->setItem(TableRowCount,0,new QTableWidgetItem(QString::number(TableRowCount+1)));
             ui->tableWidget->setItem(TableRowCount,1,new QTableWidgetItem(date_time.toString("yyyy-MM-dd")));
             ui->tableWidget->setItem(TableRowCount,2,new QTableWidgetItem(date_time.toString("hh:mm:ss")));
             ui->tableWidget->setItem(TableRowCount,3,new QTableWidgetItem(ui->tEdit_zuhao->document()->toPlainText()));
@@ -199,6 +195,131 @@ void MainWindow::keyPressEvent(QKeyEvent *event)
     case Qt::Key_X:
         ui->stackedWidget->setCurrentIndex(1 - ui->stackedWidget->currentIndex());
         break;
+    case Qt::Key_M:
+        if("" == filePathName)
+        {
+            result = QMessageBox::critical(this, "Title","未选择数据无法修改");
+            break;
+        }
+        fileinfo = filePathName;
+        if(fileinfo.isFile())
+            fileinfo.dir().remove(fileinfo.fileName());
+        {
+        QXlsx::Document motifyxlsx(filePathName);
+        QStringList titleList;
+        // 设置列宽
+        motifyxlsx.setColumnWidth(1, 9);//第一行,20列宽
+
+        // 设置excel表头（第一行数据）
+        titleList <<"序号"
+                  <<"日期"
+                  <<"时间"
+                  <<"桩号"
+                  <<"入土深度"
+                  <<"打桩深度"
+                  <<"桩直径"
+                  <<"扩孔位置"
+                  <<"扩孔直径";
+
+        for (int i = 0; i < 9; i++){
+            motifyxlsx.write(1, i+1, titleList.at(i));//这里写第一行，第n列数据
+        }
+
+        TableRowCount = ui->tableWidget->rowCount() - 1;
+        qDebug() << "TableRowCount = " << TableRowCount;
+        XlsxRowCount = TableRowCount + 1;
+        for (int i=2;i<=XlsxRowCount;i++) {
+            for (int j=0;j<9;j++) {
+                motifyxlsx.write(i, j+1, ui->tableWidget->item(i-2,j)->text());
+            }
+        }
+        motifyxlsx.saveAs(filePathName);
+        }
+        break;
+
+    case Qt::Key_Minus:
+
+        if("" == filePathName)
+        {
+            result = QMessageBox::critical(this, "Title","未插入数据无法删除");
+            break;
+        }
+
+        filePathName = "/home/mdtech/QtProject/TongXin/Data-";
+        filePathName += date_time.toString("yyyy-MM-dd");
+        filePathName += ".xls";
+        fileinfo = filePathName;
+        if(!fileinfo.isFile())
+        {
+            result = QMessageBox::critical(this, "Title","当日Excel数据丢失无法删除");
+            break;
+        }
+        //xlsx导出
+        QXlsx::Document readxlsx(filePathName);
+
+        readxlsx.setColumnWidth(1, 9);
+        XlsxRowCount = readxlsx.dimension().rowCount();
+        if(2 > XlsxRowCount)
+        {
+            result = QMessageBox::critical(this, "Title","当日Excel无数据无法删除");
+            break;
+        }
+//        for (int i = 0; i < 9; i++){
+//            deletexlsx.write(XlsxRowCount, i+1, "");//这里写第一行，第n列数据
+//        }
+
+        TableRowCount = ui->tableWidget->rowCount() - 1;
+        for (int i=TableRowCount-1;i>=0;i--) {
+            ui->tableWidget->removeRow(i);
+        }
+
+//        TableRowCount = XlsxRowCount-2;//最后一行不复制
+        for (int i=2;i<=XlsxRowCount-1;i++) {
+            ui->tableWidget->insertRow(i-2);
+            ui->tableWidget->setItem(i-2,0,new QTableWidgetItem(readxlsx.cellAt(i,1)->value().toString()));
+            ui->tableWidget->setItem(i-2,1,new QTableWidgetItem(readxlsx.cellAt(i,2)->value().toString()));
+            ui->tableWidget->setItem(i-2,2,new QTableWidgetItem(readxlsx.cellAt(i,3)->value().toString()));
+            ui->tableWidget->setItem(i-2,3,new QTableWidgetItem(readxlsx.cellAt(i,4)->value().toString()));
+            ui->tableWidget->setItem(i-2,4,new QTableWidgetItem(readxlsx.cellAt(i,5)->value().toString()));
+            ui->tableWidget->setItem(i-2,5,new QTableWidgetItem(readxlsx.cellAt(i,6)->value().toString()));
+            ui->tableWidget->setItem(i-2,6,new QTableWidgetItem(readxlsx.cellAt(i,7)->value().toString()));
+            ui->tableWidget->setItem(i-2,7,new QTableWidgetItem(readxlsx.cellAt(i,8)->value().toString()));
+            ui->tableWidget->setItem(i-2,8,new QTableWidgetItem(readxlsx.cellAt(i,9)->value().toString()));
+        }
+        readxlsx.saveAs(filePathName);
+        fileinfo.dir().remove(fileinfo.fileName());
+
+        QXlsx::Document deletexlsx(filePathName);
+        QStringList titleList;
+        deletexlsx.setColumnWidth(1, 9);
+
+        // 设置excel表头（第一行数据）
+        titleList <<"序号"
+                  <<"日期"
+                  <<"时间"
+                  <<"桩号"
+                  <<"入土深度"
+                  <<"打桩深度"
+                  <<"桩直径"
+                  <<"扩孔位置"
+                  <<"扩孔直径";
+
+        for (int i = 0; i < 9; i++){
+            deletexlsx.write(1, i+1, titleList.at(i));//这里写第一行，第n列数据
+        }
+
+        TableRowCount = ui->tableWidget->rowCount() - 1;
+        qDebug() << "TableRowCount = " << TableRowCount;
+        XlsxRowCount = TableRowCount + 1;
+        for (int i=2;i<=XlsxRowCount;i++) {
+            for (int j=0;j<9;j++) {
+                deletexlsx.write(i, j+1, ui->tableWidget->item(i-2,j)->text());
+            }
+        }
+
+        deletexlsx.saveAs(filePathName);
+        break;
+
     }
 }
 
@@ -206,7 +327,7 @@ bool MainWindow::eventFilter(QObject *watched, QEvent *event)
 {
     QTextEdit* te_watched = (QTextEdit*)watched;
     QKeyEvent* ke_event = (QKeyEvent*)event;
-    if((Qt::Key_S == ke_event->key() || Qt::Key_Q == ke_event->key() \
+    if((Qt::Key_S == ke_event->key() || Qt::Key_Q == ke_event->key() || Qt::Key_M == ke_event->key() \
         || Qt::Key_D == ke_event->key() || Qt::Key_X == ke_event->key() \
         || Qt::Key_Plus == ke_event->key() || Qt::Key_Minus == ke_event->key()) \
         &&(ke_event->KeyPress == ke_event->type()))
