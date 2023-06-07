@@ -1,6 +1,59 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 
+SensorThread::SensorThread()
+{
+    bRunExit = true;
+    LightResult = "";
+    ret = -1;
+    pLightFd = nullptr;
+    AxisFd = -1;
+
+    pLightFd = modbus_new_rtu("/dev/ttyUSB0",115200,'N',8,1);
+    if(nullptr == pLightFd)
+    {
+        cout << "Unable to allocate libmodbus contex !" << endl;
+        this->exit();
+        return;
+    }
+    modbus_set_slave(pLightFd, 1);
+    if (-1 == modbus_connect(pLightFd))
+    {
+        cout << "Connection failed:" << modbus_strerror(errno) << endl;
+        this->exit();
+        return;
+    }
+
+}
+
+void SensorThread::run()
+{
+    float Len32;
+    while (bRunExit) {
+        ret = modbus_read_registers(pLightFd, 0x10, 0x02, LightLenth);
+        if(-1 == ret)
+        {
+            cout << "pLightFd read error !" << endl;
+        }
+        else {
+            cout << "light[0] = " << LightLenth[0] << " light[1] = " << LightLenth[1] << endl;
+            Len32 = (LightLenth[0]*2^16 + LightLenth[1])/1000;
+            cout << "Len32 = " << Len32 << endl;
+            LightResult = QString::fromStdString(to_string(Len32));
+        }
+
+        sleep(1);
+    }
+}
+
+SensorThread::~SensorThread()
+{
+    this->bRunExit = false;
+    this->wait();
+    modbus_close(this->pLightFd);
+    cout << "SensorThread exit !" << endl;
+}
+
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow)
@@ -40,6 +93,9 @@ MainWindow::MainWindow(QWidget *parent) :
     XlsxRowCount = 1;
     DeleteRowCount = 0;
     filePathName = "";
+
+    pSensorThread = new SensorThread();
+    pSensorThread->start();
 }
 
 void MainWindow::date_update()
@@ -60,6 +116,8 @@ void MainWindow::date_update()
     TimeList.pop_front();
     ui->time_miao->setText(*TimeList.begin());
     TimeList.pop_front();
+
+    ui->tEdit_ceju->setText(this->pSensorThread->LightResult);
     date_timer->start(500);
 }
 
@@ -904,4 +962,5 @@ bool MainWindow::eventFilter(QObject *watched, QEvent *event)
 MainWindow::~MainWindow()
 {
     delete ui;
+    delete pSensorThread;
 }

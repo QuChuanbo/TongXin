@@ -28,10 +28,15 @@ CONFIG += c++11
 
 SOURCES += \
         main.cpp \
-        mainwindow.cpp
+        mainwindow.cpp \
+        uart_config.cpp
 
 HEADERS += \
-        mainwindow.h
+        mainwindow.h \
+        modbus.h \
+        uart_config.h
+
+LIBS += -lmodbus
 
 FORMS += \
         mainwindow.ui

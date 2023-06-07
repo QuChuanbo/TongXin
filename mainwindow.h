@@ -13,6 +13,34 @@
 #include <QFile>
 #include <QFileDevice>
 #include <QFileDialog>
+#include <iostream>
+#include <string>
+#include <QThread>
+#include "modbus.h"
+#include "uart_config.h"
+
+using namespace std;
+
+class SensorThread : public QThread
+{
+    Q_OBJECT
+public:
+    SensorThread();
+
+    ~SensorThread() override;
+    modbus_t* pLightFd;
+
+    QString LightResult;
+
+    int AxisFd;
+    int ret;
+protected:
+    void run() override;
+private:
+    bool bRunExit;
+    uint16_t LightLenth[2];
+};
+
 
 namespace Ui {
 class MainWindow;
@@ -49,6 +77,8 @@ public slots:
 
 private:
     Ui::MainWindow *ui;
+
+    SensorThread* pSensorThread;
 };
 
 #endif // MAINWINDOW_H
