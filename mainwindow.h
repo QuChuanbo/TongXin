@@ -29,16 +29,18 @@ public:
 
     ~SensorThread() override;
     modbus_t* pLightFd;
-
     QString LightResult;
 
-    int AxisFd;
+    modbus_t* pAxisFd;
+    QString AxisResult[2];
+
     int ret;
 protected:
     void run() override;
 private:
     bool bRunExit;
     uint16_t LightLenth[2];
+    uint16_t AxisLenth[16];
 };
 
 

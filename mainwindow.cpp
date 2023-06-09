@@ -7,17 +7,34 @@ SensorThread::SensorThread()
     LightResult = "";
     ret = -1;
     pLightFd = nullptr;
-    AxisFd = -1;
+    pAxisFd = nullptr;
+    AxisResult[0] = "";
+    AxisResult[1] = "";
 
-    pLightFd = modbus_new_rtu("/dev/ttyUSB0",115200,'N',8,1);
-    if(nullptr == pLightFd)
+//    pLightFd = modbus_new_rtu("/dev/ttyUSB0",115200,'N',8,1);
+//    if(nullptr == pLightFd)
+//    {
+//        cout << "Unable to allocate libmodbus contex !" << endl;
+//        this->exit();
+//        return;
+//    }
+//    modbus_set_slave(pLightFd, 1);
+//    if (-1 == modbus_connect(pLightFd))
+//    {
+//        cout << "Connection failed:" << modbus_strerror(errno) << endl;
+//        this->exit();
+//        return;
+//    }
+
+    pAxisFd = modbus_new_rtu("/dev/ttyUSB0",9600,'N',8,1);
+    if(nullptr == pAxisFd)
     {
-        cout << "Unable to allocate libmodbus contex !" << endl;
+        cout << "pAxisFd Unable to allocate libmodbus contex !" << endl;
         this->exit();
         return;
     }
-    modbus_set_slave(pLightFd, 1);
-    if (-1 == modbus_connect(pLightFd))
+    modbus_set_slave(pAxisFd, 0x50);
+    if (-1 == modbus_connect(pAxisFd))
     {
         cout << "Connection failed:" << modbus_strerror(errno) << endl;
         this->exit();
@@ -28,19 +45,34 @@ SensorThread::SensorThread()
 
 void SensorThread::run()
 {
-    float Len32;
+    float Len32,Len32_axis[2];
     while (bRunExit) {
-        ret = modbus_read_registers(pLightFd, 0x10, 0x02, LightLenth);
+//        ret = modbus_read_registers(pLightFd, 0x10, 0x02, LightLenth);
+//        if(-1 == ret)
+//        {
+//            cout << "pLightFd read error !" << endl;
+//        }
+//        else {
+//            cout << "light[0] = " << LightLenth[0] << " light[1] = " << LightLenth[1] << endl;
+//            Len32 = (LightLenth[0]*2^16 + LightLenth[1])/1000;
+//            cout << "Len32 = " << Len32 << endl;
+//            LightResult = QString::fromStdString(to_string(Len32));
+//        }
+        /*****************************************/
+        ret = modbus_read_registers(pAxisFd, 0x34, 0x0F, AxisLenth);
         if(-1 == ret)
         {
-            cout << "pLightFd read error !" << endl;
+            cout << "pAxisFd read error !" << endl;
         }
         else {
-            cout << "light[0] = " << LightLenth[0] << " light[1] = " << LightLenth[1] << endl;
-            Len32 = (LightLenth[0]*2^16 + LightLenth[1])/1000;
-            cout << "Len32 = " << Len32 << endl;
-            LightResult = QString::fromStdString(to_string(Len32));
+            Len32_axis[0] = static_cast<float>(AxisLenth[9]/32768.0f*180.0f);
+            cout << "x = " << Len32_axis[0] << endl;
+            Len32_axis[1] = static_cast<float>(AxisLenth[10]/32768.0f*180.0f);
+            cout << "y = " << Len32_axis[1] << endl;
+            AxisResult[0] = QString::fromStdString(to_string(Len32_axis[0])) + "°";
+            AxisResult[1] = QString::fromStdString(to_string(Len32_axis[1])) + "°";
         }
+
 
         sleep(1);
     }
@@ -51,6 +83,7 @@ SensorThread::~SensorThread()
     this->bRunExit = false;
     this->wait();
     modbus_close(this->pLightFd);
+    modbus_close(this->pAxisFd);
     cout << "SensorThread exit !" << endl;
 }
 
@@ -70,7 +103,7 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->tEdit_ceju->installEventFilter(this);
     ui->tEdit_kowei->installEventFilter(this);
     ui->tEdit_wanzu->installEventFilter(this);
-    ui->tEdit_wendu->installEventFilter(this);
+//    ui->tEdit_wendu->installEventFilter(this);
     ui->tEdit_zuhao->installEventFilter(this);
     ui->tEdit_kozhij->installEventFilter(this);
     ui->tEdit_wankuo->installEventFilter(this);
@@ -118,6 +151,8 @@ void MainWindow::date_update()
     TimeList.pop_front();
 
     ui->tEdit_ceju->setText(this->pSensorThread->LightResult);
+    ui->tEdit_Xdu->setText(this->pSensorThread->AxisResult[0]);
+    ui->tEdit_Ydu->setText(this->pSensorThread->AxisResult[1]);
     date_timer->start(500);
 }
 
@@ -635,31 +670,9 @@ bool MainWindow::eventFilter(QObject *watched, QEvent *event)
         }
     }
     else if (ui->tEdit_wankuo == te_watched) {
-        if((Qt::Key_Down == ke_event->key())&&(ke_event->KeyPress == ke_event->type()))
-        {
-            ke_event->ignore();
-            ui->tEdit_wendu->setFocus();
-            return true;
-        }
-        else if ((Qt::Key_Up == ke_event->key())&&(ke_event->KeyPress == ke_event->type())) {
-            ke_event->ignore();
-            ui->tEdit_wanzu->setFocus();
-            return true;
-        }
-        else if ((Qt::Key_Left == ke_event->key())&&(ke_event->KeyPress == ke_event->type())) {
-            ke_event->ignore();
-            ui->tEdit_kozhij->setFocus();
-            return true;
-        }
-        else {
-            ke_event->accept();
-            return false;
-        }
-    }
-    else if (ui->tEdit_wendu == te_watched) {
         if ((Qt::Key_Up == ke_event->key())&&(ke_event->KeyPress == ke_event->type())) {
             ke_event->ignore();
-            ui->tEdit_wankuo->setFocus();
+            ui->tEdit_wanzu->setFocus();
             return true;
         }
         else if ((Qt::Key_Left == ke_event->key())&&(ke_event->KeyPress == ke_event->type())) {
