@@ -127,6 +127,9 @@ MainWindow::MainWindow(QWidget *parent) :
     DeleteRowCount = 0;
     filePathName = "";
 
+    TableSelectedRow = 0;
+    TableSelectedColumn = 0;
+
     pSensorThread = new SensorThread();
     pSensorThread->start();
 }
@@ -822,8 +825,16 @@ bool MainWindow::eventFilter(QObject *watched, QEvent *event)
         else if ((Qt::Key_Down == ke_event->key())&&(ke_event->KeyPress == ke_event->type())) {
             ke_event->ignore();
 //            ui->tEdit_zuhao->setFocus();
-            ui->tableWidget->setFocus();
-            return true;
+            if(0 != TableRowCount)
+            {
+                ui->tableWidget->setFocus();
+                return true;
+            }
+            else {
+                ke_event->accept();
+                return false;
+            }
+
         }
         else {
             ke_event->accept();
@@ -845,8 +856,15 @@ bool MainWindow::eventFilter(QObject *watched, QEvent *event)
         else if ((Qt::Key_Down == ke_event->key())&&(ke_event->KeyPress == ke_event->type())) {
             ke_event->ignore();
 //            ui->tEdit_zuhao->setFocus();
-            ui->tableWidget->setFocus();
-            return true;
+            if(0 != TableRowCount)
+            {
+                ui->tableWidget->setFocus();
+                return true;
+            }
+            else {
+                ke_event->accept();
+                return false;
+            }
         }
         else {
             ke_event->accept();
@@ -868,8 +886,15 @@ bool MainWindow::eventFilter(QObject *watched, QEvent *event)
         else if ((Qt::Key_Down == ke_event->key())&&(ke_event->KeyPress == ke_event->type())) {
             ke_event->ignore();
 //            ui->tEdit_zuhao->setFocus();
-            ui->tableWidget->setFocus();
-            return true;
+            if(0 != TableRowCount)
+            {
+                ui->tableWidget->setFocus();
+                return true;
+            }
+            else {
+                ke_event->accept();
+                return false;
+            }
         }
         else {
             ke_event->accept();
@@ -891,8 +916,15 @@ bool MainWindow::eventFilter(QObject *watched, QEvent *event)
         else if ((Qt::Key_Down == ke_event->key())&&(ke_event->KeyPress == ke_event->type())) {
             ke_event->ignore();
 //            ui->tEdit_zuhao->setFocus();
-            ui->tableWidget->setFocus();
-            return true;
+            if(0 != TableRowCount)
+            {
+                ui->tableWidget->setFocus();
+                return true;
+            }
+            else {
+                ke_event->accept();
+                return false;
+            }
         }
         else {
             ke_event->accept();
@@ -914,8 +946,15 @@ bool MainWindow::eventFilter(QObject *watched, QEvent *event)
         else if ((Qt::Key_Down == ke_event->key())&&(ke_event->KeyPress == ke_event->type())) {
             ke_event->ignore();
 //            ui->tEdit_zuhao->setFocus();
-            ui->tableWidget->setFocus();
-            return true;
+            if(0 != TableRowCount)
+            {
+                ui->tableWidget->setFocus();
+                return true;
+            }
+            else {
+                ke_event->accept();
+                return false;
+            }
         }
         else {
             ke_event->accept();
@@ -931,8 +970,15 @@ bool MainWindow::eventFilter(QObject *watched, QEvent *event)
         else if ((Qt::Key_Down == ke_event->key())&&(ke_event->KeyPress == ke_event->type())) {
             ke_event->ignore();
 //            ui->tEdit_zuhao->setFocus();
-            ui->tableWidget->setFocus();
-            return true;
+            if(0 != TableRowCount)
+            {
+                ui->tableWidget->setFocus();
+                return true;
+            }
+            else {
+                ke_event->accept();
+                return false;
+            }
         }
         else {
             ke_event->accept();
@@ -940,14 +986,43 @@ bool MainWindow::eventFilter(QObject *watched, QEvent *event)
         }
     }
     else if (ui->tableWidget->hasFocus()) {
+        cout << "TableRowCount =" << TableRowCount << endl;
+        cout << "ui->tableWidget->currentRow() =" << ui->tableWidget->currentRow() << endl;
+        cout << "ui->tableWidget->currentColumn() =" << ui->tableWidget->currentColumn() << endl;
+        if(0 == TableRowCount)
+        {
+            ke_event->accept();
+            return false;
+        }
+
+        if(!ui->tableWidget->item(TableSelectedRow,TableSelectedColumn)->isSelected())
+        {
+            if(0 > ui->tableWidget->currentRow() || 0 > ui->tableWidget->currentColumn())
+            {
+                TableSelectedRow = 0;
+                TableSelectedColumn = 0;
+            }
+            else {
+                TableSelectedRow = ui->tableWidget->currentRow();
+                TableSelectedColumn = ui->tableWidget->currentColumn();
+            }
+
+        }
+
         if ((Qt::Key_Left == ke_event->key())&&(ke_event->KeyPress == ke_event->type())) {
             ke_event->ignore();
 //            ui->tEdit_sousuojg->setFocus();
+
+
             return true;
         }
         else if ((Qt::Key_Right == ke_event->key())&&(ke_event->KeyPress == ke_event->type())) {
             ke_event->ignore();
 //            ui->tEdit_zuhao->setFocus();
+
+            ui->tableWidget->item(TableSelectedRow,TableSelectedColumn)->setSelected(false);
+            ui->tableWidget->item(TableSelectedRow,++TableSelectedColumn)->setSelected(true);
+
             return true;
         }
         else if ((Qt::Key_Up == ke_event->key())&&(ke_event->KeyPress == ke_event->type())) {
@@ -964,6 +1039,7 @@ bool MainWindow::eventFilter(QObject *watched, QEvent *event)
             ke_event->accept();
             return false;
         }
+
     }
 
     else {

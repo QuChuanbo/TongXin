@@ -69,6 +69,10 @@ public:
     int XlsxRowCount;
     int DeleteRowCount;
 
+    int TableSelectedRow;
+    int TableSelectedColumn;
+//    bool TableWidgetSelectedFlag;
+
 protected:
     void keyPressEvent(QKeyEvent *event);
 
