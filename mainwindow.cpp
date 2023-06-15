@@ -26,7 +26,7 @@ SensorThread::SensorThread()
 //        return;
 //    }
 
-    pAxisFd = modbus_new_rtu("/dev/ttyUSB0",9600,'N',8,1);
+    pAxisFd = modbus_new_rtu("/dev/ttyS0",9600,'N',8,1);
     if(nullptr == pAxisFd)
     {
         cout << "pAxisFd Unable to allocate libmodbus contex !" << endl;
@@ -126,9 +126,6 @@ MainWindow::MainWindow(QWidget *parent) :
     XlsxRowCount = 1;
     DeleteRowCount = 0;
     filePathName = "";
-
-    TableSelectedRow = 0;
-    TableSelectedColumn = 0;
 
     pSensorThread = new SensorThread();
     pSensorThread->start();
@@ -995,24 +992,13 @@ bool MainWindow::eventFilter(QObject *watched, QEvent *event)
             return false;
         }
 
-        if(!ui->tableWidget->item(TableSelectedRow,TableSelectedColumn)->isSelected())
-        {
-            if(0 > ui->tableWidget->currentRow() || 0 > ui->tableWidget->currentColumn())
-            {
-                TableSelectedRow = 0;
-                TableSelectedColumn = 0;
-            }
-            else {
-                TableSelectedRow = ui->tableWidget->currentRow();
-                TableSelectedColumn = ui->tableWidget->currentColumn();
-            }
-
-        }
-
         if ((Qt::Key_Left == ke_event->key())&&(ke_event->KeyPress == ke_event->type())) {
             ke_event->ignore();
 //            ui->tEdit_sousuojg->setFocus();
-
+            if(0 != ui->tableWidget->currentColumn())
+            {
+                ui->tableWidget->setCurrentCell(ui->tableWidget->currentRow(),ui->tableWidget->currentColumn()-1);
+            }
 
             return true;
         }
@@ -1020,19 +1006,32 @@ bool MainWindow::eventFilter(QObject *watched, QEvent *event)
             ke_event->ignore();
 //            ui->tEdit_zuhao->setFocus();
 
-            ui->tableWidget->item(TableSelectedRow,TableSelectedColumn)->setSelected(false);
-            ui->tableWidget->item(TableSelectedRow,++TableSelectedColumn)->setSelected(true);
-
+            if(8 != ui->tableWidget->currentColumn())
+            {
+                ui->tableWidget->setCurrentCell(ui->tableWidget->currentRow(),ui->tableWidget->currentColumn()+1);
+            }
             return true;
         }
         else if ((Qt::Key_Up == ke_event->key())&&(ke_event->KeyPress == ke_event->type())) {
             ke_event->ignore();
 //            ui->tEdit_zuhao->setFocus();
+            if(0 != ui->tableWidget->currentRow())
+            {
+                ui->tableWidget->setCurrentCell(ui->tableWidget->currentRow()-1,ui->tableWidget->currentColumn());
+            }
+            else {
+                ui->time_year_2->setFocus();
+            }
             return true;
         }
         else if ((Qt::Key_Down == ke_event->key())&&(ke_event->KeyPress == ke_event->type())) {
             ke_event->ignore();
 //            ui->tEdit_zuhao->setFocus();
+            if(TableRowCount > ui->tableWidget->currentRow())
+            {
+                ui->tableWidget->setCurrentCell(ui->tableWidget->currentRow()+1,ui->tableWidget->currentColumn());
+            }
+
             return true;
         }
         else {
